@@ -38,8 +38,11 @@ typedef struct {
    enum ConstantType tag;
    union {
         u16 val_16;
+        jvm_method_handle method_handle;
         u32 val_32;
         u64 val_64;
+        jr_string_view val_utf8;
+
    };
 } constant_pool_entry;
 

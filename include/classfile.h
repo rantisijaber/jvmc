@@ -3,17 +3,32 @@
 
 
 #include "jr_utils.h"
-#include "member.h"
 #include "conpool.h"
 
-typedef struct {
+typedef struct jvm_header jvm_header;
+typedef struct jvm_member jvm_member;
+typedef struct jvm_class_file jvm_class_file;
+
+
+struct jvm_header {
     u32 magic_number;
     u16 minor;
     u16 major;
     u16 constant_pool_count;
-} jvm_header;
+};
 
-typedef struct {
+struct jvm_member {
+    u16 m_access_flags;
+    u16 name_index;
+    u16 descriptor_info;
+    u16 attribute_count;
+};
+
+jvm_member make_member(jvm_class_file* cf);
+u16 parse_m_acc_flags(jvm_class_file* cf); 
+
+
+struct jvm_class_file {
     usz pos;
     jvm_header header;
     u16 this_class;
@@ -27,7 +42,7 @@ typedef struct {
     jvm_member* methods;
     jr_string_view bytecode;
     jvm_constant_pool pool;    
-} jvm_class_file;
+};
 
 
 
