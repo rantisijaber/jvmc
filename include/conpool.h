@@ -53,7 +53,6 @@ typedef struct {
 
 
 void conpool_append(jvm_constant_pool* conpool, constant_pool_entry entry);
-void conpool_parse(jvm_constant_pool* conpool);
 
 
 

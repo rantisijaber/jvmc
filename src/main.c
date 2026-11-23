@@ -5,7 +5,7 @@
 
 
 int main(int argc, char** args) { 
-    if (argc != 2) return 1;
+    ERROR_CHECK(argc != 2, "Invalid number of arguments", return 1;);
 
     const char* filename = args[1];
 
@@ -16,6 +16,7 @@ int main(int argc, char** args) {
         return 1;
     }
     
+
     fseek(file, 0, SEEK_END);
     u64 size = ftell(file);
     rewind(file);
@@ -35,8 +36,8 @@ int main(int argc, char** args) {
 
     jvm_class_file cf = { .bytecode = sv };
     
-    cf_parse(&cf);
-
+    cf_parse_header(&cf);
+    printf("0x%08X\n", cf.header.magic_number);
 
     return 0; 
 
