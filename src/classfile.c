@@ -31,7 +31,7 @@ u32 parse_u32(jvm_class_file* cf) {
 
 void cf_parse_header(jvm_class_file* cf) {
     cf->header.magic_number = parse_u32(cf);
-    ERROR_CHECK(cf->header.magic_number != 0xCAFEBABE, "Invalid magic number", exit(EXIT_FAILURE););
+    ERROR_CHECK(cf->header.magic_number != 0xCAFEBABE, "Invalid magic number", exit(EXIT_FAILURE));
     cf->header.minor = parse_u16(cf);
     cf->header.major = parse_u16(cf);
     cf->header.constant_pool_count = parse_u16(cf);
@@ -44,26 +44,25 @@ void cf_parse_class_acc(jvm_class_file* cf) {
             || ((acc_flags >> 4) & 1)
             || ((acc_flags >> 5) & 1)
             || ((acc_flags >> 12) & 1)
-            || ((acc_flags >> 14) & 1)), "Invalid access flags", exit(EXIT_FAILURE););
+            || ((acc_flags >> 14) & 1)), "Invalid access flags", exit(EXIT_FAILURE));
  
     } else ERROR_CHECK(((acc_flags >> 10) & 1) && 
-                    ((acc_flags >> 4) & 1),"Invalid access flags", exit(EXIT_FAILURE););        
+                    ((acc_flags >> 4) & 1),"Invalid access flags", exit(EXIT_FAILURE));        
     
     cf->cf_access_flags = acc_flags;
 }
 
 void cf_parse_this_super(jvm_class_file* cf) {
     u16 this_class = parse_u16(cf);
-    if (cf->pool.entries[this_class].tag != TYPE_CLASS) {
-        exit(1);
-    }
+    ERROR_CHECK(cf->pool.entries[this_class].tag != TYPE_CLASS, 
+            "Invalid this_class tag", exit(EXIT_FAILURE));
     u16 super_class = parse_u16(cf);
     if (super_class == 0 || ((cf->cf_access_flags >> 9) & 1)) {
         usz class_name_index = cf->pool.entries[super_class].val_16;
         jr_string_view class_name = 
                     cf->pool.entries[class_name_index].val_utf8;
         ERROR_CHECK(!sv_equals(class_name, SV_LITERAL("java/lang/Object")),
-            "Object class not marked as super", exit(EXIT_FAILURE););
+            "Object class not marked as super", exit(EXIT_FAILURE));
         }
     cf->this_class = this_class;
     cf->super_class = super_class;
@@ -77,7 +76,7 @@ void cf_parse_interfaces(jvm_class_file* cf) {
         interface_indices[i] = parse_u16(cf);
         ERROR_CHECK(cf->pool.entries[interface_indices[i]].tag != TYPE_CLASS,
                     "Interface pool entry not marked as a type_class", 
-                    exit(EXIT_FAILURE););
+                    exit(EXIT_FAILURE));
     }
     cf->interface_count = interface_count;
     cf->interface_indices = interface_indices;
@@ -159,7 +158,7 @@ void conpool_parse(jvm_class_file* cf) {
                 break;
             }
             default:
-                ERROR_NCONDITION("Invalid tag", exit(EXIT_FAILURE););    
+                ERROR_NCONDITION("Invalid tag", exit(EXIT_FAILURE));    
 
                 
         } 
