@@ -19,7 +19,7 @@ void cf_parse(jvm_class_file* cf) {
 
 u16 parse_u16(jvm_class_file* cf) {
     u16 result = ((cf->bytecode.data[cf->pos] & 0xFFFF) << 8)
-                | (cf->bytecode.data[cf->pos + 1] & 0xFFF);
+                | (cf->bytecode.data[cf->pos + 1] & 0xFFFF);
     cf->pos += 2;
     return result;
 }
