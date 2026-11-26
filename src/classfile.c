@@ -99,11 +99,76 @@ void cf_parse_fields(jvm_class_file* cf) {
 void conpool_append(jvm_constant_pool* conpool, constant_pool_entry entry) {
     conpool->entries[conpool->pos++] = entry;
 }
-//
-// void conpool_parse(jvm_constant_pool* conpool, jvm_class_file* cf) {
-//    for (usz i = 1; i < cf->header.constant_pool_count; i++) {
-//         u8 tag = cf->bytecode.data[i];
-//
-//     } 
-// }
+
+
+
+void conpool_parse(jvm_class_file* cf) {
+   for (usz i = 1; i < cf->header.constant_pool_count; i++) {
+        u8 tag = cf->bytecode.data[i];
+        cf->pos++;
+        ConstantType entag = get_type(tag);
+        constant_pool_entry entry = { .tag = entag };
+        bool is64 = false;
+        switch (entag) {
+            case TYPE_UTF8: {
+                u16 length = parse_u16(cf);
+                jr_string_view parsed_utf8 = 
+                    sv_substring(cf->bytecode, cf->pos, cf->pos + length - 1);  
+                cf->pos += length;
+                entry.val_utf8 = parsed_utf8;
+                break;
+            }
+
+            case TYPE_FIELDREF:
+            case TYPE_METHODREF:
+            case TYPE_INTERFACE_METHODREF:
+            case TYPE_NAMEANDTYPE:
+            case TYPE_INTEGER:
+            case TYPE_FLOAT: {
+                u32 parsed_32 = parse_u32(cf);
+                entry.val_32 = parsed_32;
+                break;
+            }
+            case TYPE_LONG:
+            case TYPE_DOUBLE: {
+                u32 top_bytes = parse_u32(cf);
+                u32 bottom_bytes = parse_u32(cf);
+                u64 parsed_64 = ((top_bytes & 0xFFFFFFFFFFFFFFFF) << 32) 
+                                | ((bottom_bytes & 0xFFFFFFFFFFFFFFFF));
+                entry.val_64 = parsed_64;
+                i++;
+                is64 = true;
+                break;
+            }
+            case TYPE_CLASS:
+            case TYPE_STRING:
+            case TYPE_METHODTYPE:
+            case TYPE_MODUL:
+            case TYPE_PACKAGE: {
+                u16 parsed_16 = parse_u16(cf);
+                entry.val_16 = parsed_16;
+                break;
+            }
+            case TYPE_METHODHANDLE: {
+                jvm_method_handle handle = {
+                    .kind = cf->bytecode.data[cf->pos++],
+                    .index = parse_u16(cf)
+                };
+                
+                entry.method_handle = handle;
+                break;
+            }
+            default:
+                ERROR_NCONDITION("Invalid tag", exit(EXIT_FAILURE););    
+
+                
+        } 
+        conpool_append(&cf->pool, entry);
+        if (is64) {
+            conpool_append(&cf->pool, 
+                (constant_pool_entry){ .tag = TYPE_AFTER64 });
+        }
+
+    } 
+}
 
